@@ -3,7 +3,7 @@
 import { Table } from '@tanstack/react-table'
 import dayjs from 'dayjs'
 import { map } from 'lodash'
-import { ChevronDown } from 'lucide-react'
+import { Check, ChevronDown } from 'lucide-react'
 
 import { Debit } from '@/api/fetch-debts-by-period'
 import { Period } from '@/api/fetch-user-periods'
@@ -43,8 +43,8 @@ export function TableActions({ table, periods }: TableActionsProps) {
   }
 
   return (
-    <div className="flex items-center py-4">
-      <div className="flex gap-2">
+    <div className="flex items-center justify-between py-4">
+      <div className="flex items-center gap-2">
         <Input
           placeholder="Filtrar por descrição"
           value={
@@ -84,20 +84,30 @@ export function TableActions({ table, periods }: TableActionsProps) {
         </DropdownMenu>
       </div>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="ml-auto">
-            Períodos <ChevronDown className="ml-2 h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {periodsOptions.map((period) => (
-            <DropdownMenuItem onClick={() => handleSetPeriod(period.value)}>
-              {period.label}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="ml-auto">
+              Períodos <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {periodsOptions.map((period) => (
+              <DropdownMenuItem onClick={() => handleSetPeriod(period.value)}>
+                {period.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Button
+          variant="outline"
+          onClick={() => table.toggleAllPageRowsSelected()}
+        >
+          <Check className="mr-2 size-4 text-emerald-500" />
+          Marcar todos como pago
+        </Button>
+      </div>
     </div>
   )
 }

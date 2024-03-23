@@ -1,6 +1,7 @@
 'use client'
 
 import { QueryClientProvider } from '@tanstack/react-query'
+import { Provider } from 'jotai'
 import { useRouter } from 'next/navigation'
 import { SessionProvider } from 'next-auth/react'
 import { ReactNode, useEffect } from 'react'
@@ -36,7 +37,9 @@ export function QueryProvider({ children }: QueryProviderProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionProvider>{children}</SessionProvider>
+      <SessionProvider>
+        <Provider>{children}</Provider>
+      </SessionProvider>
     </QueryClientProvider>
   )
 }

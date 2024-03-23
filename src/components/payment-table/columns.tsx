@@ -11,36 +11,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
+import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
-import { Checkbox } from '../ui/checkbox'
 
 export const columns: ColumnDef<Debit>[] = [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: 'status',
-    header: 'Status',
-    cell: ({ row }) => (
-      <div className="capitalize">{row.getValue('status')}</div>
-    ),
-  },
   {
     accessorKey: 'description',
     header: ({ column }) => {
@@ -82,6 +56,25 @@ export const columns: ColumnDef<Debit>[] = [
 
       return <div className="font-medium">{formatted}</div>
     },
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ row }) => {
+      const formattedStatus =
+        row.getValue('status') === 'pending' ? 'Pendente' : 'Pago'
+
+      return (
+        <Badge
+          variant="secondary"
+          data-isPaid={row.getValue('status') === 'paid'}
+          className="text-yellow-500 data-[isPaid=true]:text-emerald-500"
+        >
+          {formattedStatus}
+        </Badge>
+      )
+    },
+    enableSorting: true,
   },
 
   {
