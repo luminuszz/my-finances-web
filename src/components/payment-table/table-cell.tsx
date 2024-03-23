@@ -20,10 +20,16 @@ interface TableCellProps {
 
 const updateDebitSchema = z.object({
   id: z.string(),
-  amount: z.coerce.number().min(0).optional(),
+  amount: z.coerce
+    .number()
+    .min(0)
+    .optional()
+    .transform((value) => (value ? value * 100 : value)),
   description: z.string().min(3).optional(),
 })
 type UpdateDebit = z.infer<typeof updateDebitSchema>
+
+const fieldsToCanEdit = ['amount', 'description']
 
 export function TableCell({ cell }: TableCellProps) {
   const { original: debit } = cell.getContext().row
@@ -93,7 +99,7 @@ export function TableCell({ cell }: TableCellProps) {
 
   return (
     <UiTableCell onDoubleClick={() => setState({ showInput: true })}>
-      {cellState.showInput ? (
+      {cellState.showInput && fieldsToCanEdit.includes(fieldId) ? (
         <Input
           autoFocus
           type={fieldId === 'amount' ? 'number' : 'text'}

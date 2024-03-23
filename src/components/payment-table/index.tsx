@@ -13,7 +13,7 @@ import {
   VisibilityState,
 } from '@tanstack/react-table'
 import { useSetAtom } from 'jotai'
-import { last } from 'lodash'
+import { last, map } from 'lodash'
 import { useEffect, useState } from 'react'
 
 import { fetchDebtsByPeriod } from '@/api/fetch-debts-by-period'
@@ -50,6 +50,9 @@ export function PaymentTable({ periods }: PaymentTableProps) {
   const { data: debts = [] } = useQuery({
     queryKey: ['debts', { period: periodId }],
     queryFn: () => fetchDebtsByPeriod(periodId),
+    select: (data) => {
+      return map(data, (debit) => ({ ...debit, amount: debit.amount / 100 }))
+    },
   })
 
   const [sorting, setSorting] = useState<SortingState>([])
