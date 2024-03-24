@@ -98,7 +98,10 @@ export function TableCell({ cell }: TableCellProps) {
   }, [])
 
   return (
-    <UiTableCell onDoubleClick={() => setState({ showInput: true })}>
+    <UiTableCell
+      align="left"
+      onDoubleClick={() => setState({ showInput: true })}
+    >
       {cellState.showInput && fieldsToCanEdit.includes(fieldId) ? (
         <Input
           autoFocus

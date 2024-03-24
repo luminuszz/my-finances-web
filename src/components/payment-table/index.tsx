@@ -14,6 +14,7 @@ import {
 } from '@tanstack/react-table'
 import { useSetAtom } from 'jotai'
 import { last, map } from 'lodash'
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { fetchDebtsByPeriod } from '@/api/fetch-debts-by-period'
@@ -47,7 +48,7 @@ export function PaymentTable({ periods }: PaymentTableProps) {
 
   const saveCurrentPeriodId = useSetAtom(periodIdAtom)
 
-  const { data: debts = [] } = useQuery({
+  const { data: debts = [], isLoading } = useQuery({
     queryKey: ['debts', { period: periodId }],
     queryFn: () => fetchDebtsByPeriod(periodId),
     select: (data) => {
@@ -121,10 +122,15 @@ export function PaymentTable({ periods }: PaymentTableProps) {
             ) : (
               <TableRow>
                 <TableCell
+                  align="center"
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-52"
                 >
-                  No results.
+                  {isLoading ? (
+                    <Loader2 className="size-10 animate-spin text-center text-muted-foreground" />
+                  ) : (
+                    'Sem resultados'
+                  )}
                 </TableCell>
               </TableRow>
             )}
@@ -136,19 +142,19 @@ export function PaymentTable({ periods }: PaymentTableProps) {
         <div className="space-x-2">
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Anterior
+            <ChevronLeft className="size-4 text-muted-foreground" />
           </Button>
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Próximo
+            <ChevronRight className="size-4 text-muted-foreground" />
           </Button>
         </div>
       </div>

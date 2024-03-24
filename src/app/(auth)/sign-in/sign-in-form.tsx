@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
-import { createSession } from '@/api/create-sesstion'
+import { createSession } from '@/api/create-session'
 import { Button } from '@/components/ui/button'
 import {
   Form,

@@ -1,14 +1,16 @@
 import { cookies } from 'next/headers'
-import { Suspense } from 'react'
+import { cache, Suspense } from 'react'
 
 import { fetchUserPeriods } from '@/api/fetch-user-periods'
 import { PaymentTable } from '@/components/payment-table'
 
-const loadData = async () => {
+const loadData = cache(async () => {
   const response = await fetchUserPeriods(cookies().toString())
 
   return response
-}
+})
+
+export const revalidateTag = '/payments'
 
 export default async function Payments() {
   const periods = await loadData()
