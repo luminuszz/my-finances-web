@@ -31,7 +31,7 @@ export default function RootLayout({
           <QueryProvider>
             <main className="flex min-h-screen flex-col antialiased">
               {children}
-              <Toaster />
+              <Toaster richColors />
             </main>
           </QueryProvider>
         </ThemeProvider>

@@ -19,6 +19,7 @@ import { useQueryString } from '@/hooks/useQueryString'
 import { periodIdAtom } from '@/store/table'
 
 import { CreatePeriodDialog } from '../create-period-dialog'
+import { ImportCsvDialog } from '../import-csv-dialog'
 import { Button } from '../ui/button'
 import { Dialog, DialogTrigger } from '../ui/dialog'
 import { Input } from '../ui/input'
@@ -119,10 +120,15 @@ export function TableActions({ table, periods }: TableActionsProps) {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="outline">
-            <ArrowUpFromLine className="mr-2 size-4 text-emerald-500" />
-            Importar arquivo CSV
-          </Button>
+          <Dialog>
+            <ImportCsvDialog />
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <ArrowUpFromLine className="mr-2 size-4 text-emerald-500" />
+                Importar arquivo CSV
+              </Button>
+            </DialogTrigger>
+          </Dialog>
         </div>
       </div>
     </Dialog>

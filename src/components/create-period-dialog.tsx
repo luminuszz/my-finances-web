@@ -1,17 +1,17 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
-import { format, isAfter } from 'date-fns'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { areIntervalsOverlapping, format, isAfter } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import dayjs from 'dayjs'
-import { Calendar as CalendarIcon, DollarSign } from 'lucide-react'
-import { revalidatePath } from 'next/cache'
+import { Calendar as CalendarIcon, CalendarCheck } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
 
 import { createPeriod } from '@/api/create-period'
+import { Period } from '@/api/fetch-user-periods'
 import {
   DialogClose,
   DialogContent,
@@ -58,9 +58,14 @@ const formSchema = z
 type FormValues = z.infer<typeof formSchema>
 
 export function CreatePeriodDialog() {
+  const queryClient = useQueryClient()
+
   const createPeriodMutation = useMutation({
     mutationFn: createPeriod,
     mutationKey: ['createPeriod'],
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: ['periods'] })
+    },
   })
 
   const form = useForm<FormValues>({
@@ -75,17 +80,36 @@ export function CreatePeriodDialog() {
 
   async function onSubmit({ period }: FormValues) {
     try {
+      const currentPeriods = queryClient.getQueryData<Period[]>(['periods'])
+
       const payload = {
         startPeriod: period.startPeriod.toISOString(),
         endPeriod: period.endPeriod.toISOString(),
       }
 
+      const alreadyExistsPeriodInDateInterval = currentPeriods?.some((p) =>
+        areIntervalsOverlapping(
+          {
+            start: payload.startPeriod,
+            end: payload.endPeriod,
+          },
+          {
+            start: p.startPeriod,
+            end: p.endPeriod,
+          },
+        ),
+      )
+
+      if (alreadyExistsPeriodInDateInterval) {
+        toast.error('Já existe um período criado para essas datas')
+        return
+      }
+
       await createPeriodMutation.mutateAsync(payload)
+
       form.reset()
 
       toast.success('Período criado com sucesso')
-
-      revalidatePath('/payments')
     } catch (e) {
       toast.error('Erro ao criar período')
     }
@@ -101,7 +125,7 @@ export function CreatePeriodDialog() {
     <DialogContent>
       <DialogHeader>
         <DialogTitle className="flex gap-1">
-          <DollarSign className="mr-2 size-4 text-muted-foreground" /> Novo
+          <CalendarCheck className="mr-2 size-4 text-muted-foreground" /> Novo
           Período
         </DialogTitle>
 

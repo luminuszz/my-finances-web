@@ -1,5 +1,6 @@
 'use client'
 
+import { Dialog, DialogTrigger } from '@radix-ui/react-dialog'
 import { useQuery } from '@tanstack/react-query'
 import {
   ColumnFiltersState,
@@ -12,13 +13,14 @@ import {
   useReactTable,
   VisibilityState,
 } from '@tanstack/react-table'
+import { compareDesc } from 'date-fns'
 import { useSetAtom } from 'jotai'
 import { last, map } from 'lodash'
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 import { fetchDebtsByPeriod } from '@/api/fetch-debts-by-period'
-import { Period } from '@/api/fetch-user-periods'
+import { fetchUserPeriods, Period } from '@/api/fetch-user-periods'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -31,6 +33,7 @@ import {
 import { useQueryString } from '@/hooks/useQueryString'
 import { periodIdAtom } from '@/store/table'
 
+import { CreateDebitDialog } from '../create-debit-dialog'
 import { columns } from './columns'
 import { TableActions } from './table-actions'
 import { TableRow as CustomTableCell } from './table-row'
@@ -39,7 +42,13 @@ interface PaymentTableProps {
   periods: Period[]
 }
 
-export function PaymentTable({ periods }: PaymentTableProps) {
+export function PaymentTable({ periods: periodsData }: PaymentTableProps) {
+  const { data: periods } = useQuery({
+    queryKey: ['periods'],
+    queryFn: () => fetchUserPeriods(),
+    initialData: periodsData,
+  })
+
   const lastPeriod = last(periods)
 
   const [params] = useQueryString()
@@ -52,7 +61,10 @@ export function PaymentTable({ periods }: PaymentTableProps) {
     queryKey: ['debts', { period: periodId }],
     queryFn: () => fetchDebtsByPeriod(periodId),
     select: (data) => {
-      return map(data, (debit) => ({ ...debit, amount: debit.amount / 100 }))
+      return map(data, (debit) => ({
+        ...debit,
+        amount: debit.amount / 100,
+      })).sort((a, b) => compareDesc(a.createdAt, b.updatedAt))
     },
   })
 
@@ -120,11 +132,11 @@ export function PaymentTable({ periods }: PaymentTableProps) {
                 .getRowModel()
                 .rows.map((row) => <CustomTableCell rowState={row} />)
             ) : (
-              <TableRow>
+              <TableRow className="hover:">
                 <TableCell
                   align="center"
-                  colSpan={columns.length}
                   className="h-52"
+                  colSpan={columns.length}
                 >
                   {isLoading ? (
                     <Loader2 className="size-10 animate-spin text-center text-muted-foreground" />
@@ -134,6 +146,19 @@ export function PaymentTable({ periods }: PaymentTableProps) {
                 </TableCell>
               </TableRow>
             )}
+            <TableRow>
+              <TableCell align="left" colSpan={columns.length}>
+                <Dialog>
+                  <CreateDebitDialog />
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <Plus className="mr-2 size-4 text-muted-foreground" />
+                      Novo debito
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
+              </TableCell>
+            </TableRow>
           </TableBody>
         </Table>
       </div>

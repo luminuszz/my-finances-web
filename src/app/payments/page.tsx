@@ -1,3 +1,4 @@
+import { compareDesc } from 'date-fns'
 import { cookies } from 'next/headers'
 import { cache, Suspense } from 'react'
 
@@ -7,10 +8,8 @@ import { PaymentTable } from '@/components/payment-table'
 const loadData = cache(async () => {
   const response = await fetchUserPeriods(cookies().toString())
 
-  return response
+  return response.sort((a, b) => compareDesc(a.createdAt, b.createdAt))
 })
-
-export const revalidateTag = '/payments'
 
 export default async function Payments() {
   const periods = await loadData()
