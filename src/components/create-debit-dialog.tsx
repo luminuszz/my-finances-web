@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog'
 import { periodIdAtom } from '@/store/table'
 
+import { AmountInput } from './amount-input'
 import { Button } from './ui/button'
 import { Form, FormControl, FormField, FormItem, FormMessage } from './ui/form'
 import { Input } from './ui/input'
@@ -29,7 +30,8 @@ const formSchema = z.object({
   amount: z.coerce
     .number()
     .min(0)
-    .transform((value) => value * 100),
+    .transform((value) => (value * 100).toFixed(2))
+    .transform(Number),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -47,40 +49,49 @@ export function CreateDebitDialog() {
 
   const queryClient = useQueryClient()
 
+  function updateDebitCache(values: FormValues) {
+    const cache = queryClient.getQueryData<Debit[]>([
+      'debts',
+      { period: currentPeriodId },
+    ])
+
+    const debtId = Math.random().toString()
+
+    const newDebitData: Debit = {
+      amount: values.amount,
+      createdAt: new Date(),
+      description: values.description,
+      expiresAt: null,
+      id: debtId,
+      periodId: currentPeriodId,
+      status: 'pending',
+      updatedAt: new Date(),
+    }
+
+    queryClient.setQueryData<Debit[]>(
+      ['debts', { period: currentPeriodId }],
+      [...(cache ?? []), newDebitData],
+    )
+
+    return cache
+  }
+
   const createDebtMutation = useMutation({
     mutationFn: createDebt,
     mutationKey: ['create-debt'],
     onMutate(values) {
-      const cache = queryClient.getQueryData<Debit[]>([
-        'debts',
-        { period: currentPeriodId },
-      ])
-
-      const debtId = Math.random().toString()
-
-      const newDebitData: Debit = {
+      const oldCache = updateDebitCache({
         amount: values.amount,
-        createdAt: new Date(),
         description: values.description,
-        expiresAt: null,
-        id: debtId,
-        periodId: currentPeriodId,
-        status: 'pending',
-        updatedAt: new Date(),
-      }
+      })
 
-      queryClient.setQueryData<Debit[]>(
-        ['debts', { period: currentPeriodId }],
-        [...(cache ?? []), newDebitData],
-      )
-
-      return debtId
+      return oldCache
     },
 
-    onError(_, __, debtId) {
+    onError(_, __, cache) {
       queryClient.setQueryData<Debit[]>(
         ['debts', { period: currentPeriodId }],
-        (old) => old?.filter((debit) => debit.id !== debtId),
+        cache,
       )
     },
   })
@@ -93,7 +104,8 @@ export function CreateDebitDialog() {
         paymentPeriodId: currentPeriodId,
       })
       toast.success('Debito criado com sucesso')
-      form.reset()
+
+      form.reset({ amount: 0, description: '' })
     } catch (e) {
       toast.error('Erro ao criar debito')
     }
@@ -133,7 +145,11 @@ export function CreateDebitDialog() {
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input {...field} type="number" placeholder="valor" />
+                  <AmountInput
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Valor"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

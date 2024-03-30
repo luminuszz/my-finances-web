@@ -24,12 +24,14 @@ import { Input } from './ui/input'
 import { Label } from './ui/label'
 
 const formSchema = z.object({
-  fileList: z
-    .instanceof(FileList)
-    .refine((value) => value.length > 0, {
+  file: z
+    .unknown()
+    .transform((value) => value as FileList | null | undefined)
+    .nullable()
+    .refine((value) => !!value, {
       message: 'Informe um arquivo válido',
     })
-    .refine((value) => value[0].type === 'text/csv', {
+    .refine((value) => value?.[0].type === 'text/csv', {
       message: 'O arquivo deve ser do tipo csv',
     }),
 })
@@ -43,13 +45,14 @@ export function ImportCsvDialog() {
     handleSubmit,
     register,
     reset,
-    watch,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    reValidateMode: 'onChange',
+    defaultValues: {
+      file: null,
+    },
   })
-
-  const fileList = watch('fileList')
 
   const { mutateAsync: importCsvFile } = useMutation({
     mutationKey: ['import-csv', { period: currentPeriodId }],
@@ -63,13 +66,13 @@ export function ImportCsvDialog() {
 
   const queryClient = useQueryClient()
 
-  async function onSubmit({ fileList }: FormValues) {
+  async function onSubmit({ file }: FormValues) {
     try {
-      const file = fileList[0]
+      if (!file) return
 
       const formData = new FormData()
 
-      formData.set('csv', file)
+      formData.set('csv', file[0])
 
       await importCsvFile({
         data: formData,
@@ -86,38 +89,34 @@ export function ImportCsvDialog() {
 
   return (
     <DialogContent>
-      <DialogHeader>
-        <DialogTitle className="flex gap-1">
-          <DollarSign className="mr-2 size-4 text-muted-foreground" /> Importar
-          arquivo csv
-        </DialogTitle>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <DialogHeader>
+          <DialogTitle className="flex gap-1">
+            <DollarSign className="mr-2 size-4 text-muted-foreground" />{' '}
+            Importar arquivo csv
+          </DialogTitle>
 
-        <DialogDescription>
-          Adicionar débitos de um arquivo csv
-        </DialogDescription>
-      </DialogHeader>
+          <DialogDescription>
+            Adicionar débitos de um arquivo csv
+          </DialogDescription>
+        </DialogHeader>
 
-      <div className="my-5 space-y-4">
-        <Label htmlFor="csv">Arquivo .csv</Label>
-        <Input {...register('fileList')} id="csv" type="file" />
-        <p className="text-sm text-red-300">{errors.fileList?.message}</p>
-      </div>
+        <div className="my-5 space-y-4">
+          <Label htmlFor="csv">Arquivo .csv</Label>
+          <Input translate="yes" id="csv" type="file" {...register('file')} />
+          <p className="text-sm text-red-300">{errors.file?.message}</p>
+        </div>
 
-      <DialogFooter>
-        <DialogClose asChild>
-          <Button variant="secondary">Cancelar</Button>
-        </DialogClose>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button type="button" variant="secondary">
+              Fechar
+            </Button>
+          </DialogClose>
 
-        <DialogClose asChild>
-          <Button
-            disabled={fileList?.length === 0}
-            type="button"
-            onClick={handleSubmit(onSubmit)}
-          >
-            Importar
-          </Button>
-        </DialogClose>
-      </DialogFooter>
+          <Button type="submit">Importar</Button>
+        </DialogFooter>
+      </form>
     </DialogContent>
   )
 }

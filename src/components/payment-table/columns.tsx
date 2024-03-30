@@ -50,7 +50,7 @@ export const columns: ColumnDef<Debit>[] = [
     },
 
     cell: ({ row }) => {
-      const formatted = new Intl.NumberFormat('en-US', {
+      const formatted = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL',
       }).format(row.getValue('amount'))
